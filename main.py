@@ -1,12 +1,12 @@
 import pygame
 
-
 WIDTH, HEIGHT = 800, 600
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("BRICK BREAKER")
 FPS = 60
 PADDLE_WIDTH = 120
 PADDLE_HEIGHT = 10
+
 
 class Paddle:
     VEL = 5
@@ -21,8 +21,9 @@ class Paddle:
     def draw(self, win):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
 
-
-def draw(win,paddle):
+    def move(self,direction):
+        self.x = self.x + self.VEL * direction
+def draw(win, paddle):
     win.fill("white")
     paddle.draw(win)
     pygame.display.update()
@@ -31,7 +32,7 @@ def draw(win,paddle):
 def main():
     clock = pygame.time.Clock()
 
-    paddle = Paddle(WIDTH/2 - PADDLE_WIDTH/2, HEIGHT - PADDLE_HEIGHT - 5, PADDLE_WIDTH, PADDLE_HEIGHT,"purple")
+    paddle = Paddle(WIDTH / 2 - PADDLE_WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5, PADDLE_WIDTH, PADDLE_HEIGHT, "purple")
 
     run = True
     while run:
@@ -41,7 +42,14 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
                 break
-        draw(win,paddle)
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_a] and paddle.x > 0:
+            paddle.move(-1)
+        if keys[pygame.K_d] and paddle.x + paddle.width < WIDTH:
+            paddle.move(1)
+
+        draw(win, paddle)
     pygame.quit()
     quit()
 
