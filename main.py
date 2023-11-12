@@ -6,29 +6,32 @@ pygame.init()
 WIDTH, HEIGHT = 800, 600
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("BRICK BREAKER")
+background_image = pygame.image.load('images/IM3.JPG')
 FPS = 60
 PADDLE_WIDTH = 120
 PADDLE_HEIGHT = 10
 BALL_RADIUS = 10
+all_sprites = pygame.sprite.Group()
 
 LIVES_FONT = pygame.font.SysFont("comicsans", 40)
 
 
-class Paddle:
+class Paddle(pygame.sprite.Sprite):
     VEL = 5
 
-    def __init__(self, x, y, width, height, color):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.color = color
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load('images/paddle.png')
+        self.rect = self.image.get_rect()
+        self.width = self.rect[2]
+        self.height = self.rect[3]
+        self.rect.center = (WIDTH // 2, HEIGHT - self.height)
 
-    def draw(self, win):
-        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
+    # def draw(self, win):
+    #     pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
 
     def move(self, direction):
-        self.x = self.x + self.VEL * direction
+        self.rect.x = self.rect.x + self.VEL * direction
 
 
 class Ball:
@@ -74,9 +77,14 @@ class Brick:
         self.health -= 1
 
 
-def draw(win, paddle, ball, bricks, lives):
-    win.fill("white")
-    paddle.draw(win)
+def draw(win, paddle, ball, bricks, lives, back, sprites):
+    # win.fill("white")
+    win.blit(back, back.get_rect())
+    # paddle.draw(win)
+
+    sprites.update()
+    sprites.draw(win)
+
     ball.draw(win)
 
     for brick in bricks:
@@ -99,18 +107,17 @@ def ball_flor_collision(ball, paddle):
     global lives
     if ball.y + BALL_RADIUS >= HEIGHT:
         lives -= 1
-        ball.set_position(paddle.x + paddle.width // 2, paddle.y - ball.radius)
+        ball.set_position(paddle.rect.x + paddle.width // 2, paddle.rect.y - ball.radius)
         ball.set_vel(0, -ball.VEL)
 
 
 def ball_paddle_collision(ball, paddle):
-    if not (ball.x <= paddle.x + paddle.width and ball.x >= paddle.x):
+    if not (ball.x <= paddle.rect.x + paddle.width and ball.x >= paddle.rect.x):
         return
-    if not (ball.y + ball.radius >= paddle.y):
+    if not (ball.y + ball.radius >= paddle.rect.y):
         return
 
-    paddle_center = paddle.x + paddle.width / 2
-    distance_to_center = ball.x - paddle_center
+    distance_to_center = ball.x - paddle.rect.centerx
 
     percent_width = distance_to_center / paddle.width
     angle = percent_width * 90
@@ -175,7 +182,8 @@ def main():
     global lives
     clock = pygame.time.Clock()
 
-    paddle = Paddle(WIDTH / 2 - PADDLE_WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5, PADDLE_WIDTH, PADDLE_HEIGHT, "purple")
+    paddle = Paddle()
+    all_sprites.add(paddle)
 
     ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, 'black')
     bricks = generate_bricks(3, 5)
@@ -189,9 +197,9 @@ def main():
                 break
 
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_a] and paddle.x > 0:
+        if keys[pygame.K_a] and paddle.rect.x > 0:
             paddle.move(-1)
-        if keys[pygame.K_d] and paddle.x + paddle.width < WIDTH:
+        if keys[pygame.K_d] and paddle.rect.x + paddle.width < WIDTH:
             paddle.move(1)
         ball.move()
         ball_collision(ball)
@@ -203,8 +211,7 @@ def main():
                 bricks.remove(brick)
 
         if lives <= 0:
-            paddle = Paddle(WIDTH / 2 - PADDLE_WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5, PADDLE_WIDTH, PADDLE_HEIGHT,
-                            "purple")
+            paddle = Paddle()
             ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, 'black')
             bricks = generate_bricks(3, 5)
             lives = 3
@@ -213,7 +220,7 @@ def main():
             win.blit(lost_text, (WIDTH/2 - lost_text.get_width()/2, HEIGHT/2 - lost_text.get_height()/2 ))
             pygame.display.update()
             pygame.time.delay(5000)
-        draw(win, paddle, ball, bricks, lives)
+        draw(win, paddle, ball, bricks, lives, background_image, all_sprites)
     pygame.quit()
     quit()
 
