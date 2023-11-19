@@ -3,7 +3,7 @@ import math
 import pygame
 
 pygame.init()
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 850, 600
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("BRICK BREAKER")
 background_image = pygame.image.load('images/IM3.JPG')
@@ -12,7 +12,7 @@ PADDLE_WIDTH = 120
 PADDLE_HEIGHT = 10
 BALL_RADIUS = 10
 all_sprites = pygame.sprite.Group()
-
+# brick_sprites = pygame.sprite.Group()
 LIVES_FONT = pygame.font.SysFont("comicsans", 40)
 
 
@@ -61,17 +61,18 @@ class Ball:
         self.y = y
 
 
-class Brick:
-    def __init__(self, x, y, width, height, health, color):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
+class Brick(pygame.sprite.Sprite):
+    def __init__(self, x, y, health):
+        pygame.sprite.Sprite.__init__(self)
         self.health = health
-        self.color = color
+        self.image = pygame.image.load('images/bt1/bt1_1.png')
+        self.rect = self.image.get_rect()
+        self.width = self.rect[2]
+        self.height = self.rect[3]
+        self.rect.topleft = (x, y)
 
-    def draw(self, win):
-        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height))
+    # def draw(self, win):
+        # pygame.draw.rect(win, (self.x, self.y, self.width, self.height))
 
     def hit(self):
         self.health -= 1
@@ -85,10 +86,13 @@ def draw(win, paddle, ball, bricks, lives, back, sprites):
     sprites.update()
     sprites.draw(win)
 
+    bricks.update()
+    bricks.draw(win)
+
     ball.draw(win)
 
-    for brick in bricks:
-        brick.draw(win)
+    # for brick in bricks:
+    #     brick.draw(win)
 
     lives_text = LIVES_FONT.render(f"HP:{lives}", 1, 'black')
     win.blit(lives_text, (10, HEIGHT - lives_text.get_height() - 10))
@@ -129,28 +133,28 @@ def ball_paddle_collision(ball, paddle):
 
 
 def ball_brick_collision(brick, ball):
-    if (brick.y < ball.y - ball.radius <= brick.y + brick.height) and (
-            brick.x - ball.radius < ball.x < brick.x + brick.width + ball.radius):
+    if (brick.rect.y < ball.y - ball.radius <= brick.rect.y + brick.height) and (
+            brick.rect.x - ball.radius < ball.x < brick.rect.x + brick.width + ball.radius):
         print(" удар снизу")
         brick.hit()
         # ball.set_positions(ball.x, ball.y + ball.VEL)
         ball.set_vel(ball.x_vel, ball.y_vel * -1)
         return True
     # удар справа
-    if (ball.x + ball.radius >= brick.x) and (ball.x + ball.radius < brick.x + brick.width) and (
-            brick.y < ball.y < brick.y + brick.height):
+    if (ball.x + ball.radius >= brick.rect.x) and (ball.x + ball.radius < brick.rect.x + brick.width) and (
+            brick.rect.y < ball.y < brick.rect.y + brick.height):
         print(" удар справа")
         brick.hit()
         ball.set_vel(ball.x_vel * -1, ball.y_vel)
         return True
-    if (ball.x - ball.radius <= brick.x + brick.width) and (ball.x - ball.radius > brick.x) and (
-            brick.y < ball.y < brick.y + brick.height):
+    if (ball.x - ball.radius <= brick.rect.x + brick.width) and (ball.x - ball.radius > brick.rect.x) and (
+            brick.rect.y < ball.y < brick.rect.y + brick.height):
         print(" удар слева")
         brick.hit()
         ball.set_vel(ball.x_vel * -1, ball.y_vel)
         return True
-    if (brick.y <= ball.y + ball.radius < brick.y + brick.height) and (
-            brick.x - ball.radius < ball.x < brick.x + brick.width + ball.radius):
+    if (brick.rect.y <= ball.y + ball.radius < brick.rect.y + brick.height) and (
+            brick.rect.x - ball.radius < ball.x < brick.rect.x + brick.width + ball.radius):
         print(" удар сверху")
         brick.hit()
         # ball.set_positions(ball.x, ball.y - ball.VEL)
@@ -160,19 +164,20 @@ def ball_brick_collision(brick, ball):
     return False
 
 
-def generate_bricks(rows, cols):
-    gap = 5
-    brick_width = (WIDTH - gap * (cols + 1)) // cols
+def generate_bricks(rows):
+    brick_sprites = pygame.sprite.Group()
+
+    brick_width = 100
     brick_height = 30
-    print(brick_width)
-    bricks = []
+    windowSize = pygame.display.get_window_size()
+    cols = windowSize[0] // brick_width
+    gap = (windowSize[0] - brick_width * cols) / (cols + 1)
     for row in range(rows):
         for col in range(cols):
-            brick = Brick(gap + col * (brick_width + gap), gap + row * (brick_height + gap), brick_width, brick_height,
-                          1, "black")
-            bricks.append(brick)
-            print(brick.x, brick.y)
-    return bricks
+            brick = Brick(gap + col * (brick_width + gap), gap + row * (brick_height + gap), 2)
+            brick_sprites.add(brick)
+            print(brick.rect.x, brick.rect.y)
+    return brick_sprites
 
 
 lives = 3
@@ -186,7 +191,7 @@ def main():
     all_sprites.add(paddle)
 
     ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, 'black')
-    bricks = generate_bricks(3, 5)
+    bricks = generate_bricks(3)
     run = True
     while run:
         clock.tick(FPS)
@@ -213,11 +218,11 @@ def main():
         if lives <= 0:
             paddle = Paddle()
             ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, 'black')
-            bricks = generate_bricks(3, 5)
+            bricks = generate_bricks(3)
             lives = 3
 
             lost_text = LIVES_FONT.render("HAHAHA YOU LOST!!!", 1, "red")
-            win.blit(lost_text, (WIDTH/2 - lost_text.get_width()/2, HEIGHT/2 - lost_text.get_height()/2 ))
+            win.blit(lost_text, (WIDTH / 2 - lost_text.get_width() / 2, HEIGHT / 2 - lost_text.get_height() / 2))
             pygame.display.update()
             pygame.time.delay(5000)
         draw(win, paddle, ball, bricks, lives, background_image, all_sprites)
