@@ -1,4 +1,5 @@
 import math
+import random
 
 import pygame
 
@@ -65,7 +66,12 @@ class Brick(pygame.sprite.Sprite):
     def __init__(self, x, y, health):
         pygame.sprite.Sprite.__init__(self)
         self.health = health
-        self.image = pygame.image.load('images/bt1/bt1_1.png')
+        self.images = []
+        self.numDir = random.choice(range(1,4))
+        self.images.append(pygame.image.load(f'images/bt{self.numDir}/bt{self.numDir}_1.png'))
+        self.images.append(pygame.image.load(f'images/bt{self.numDir}/bt{self.numDir}_2.png'))
+        self.imageIndex = 0
+        self.image = self.images[self.imageIndex]
         self.rect = self.image.get_rect()
         self.width = self.rect[2]
         self.height = self.rect[3]
@@ -76,6 +82,9 @@ class Brick(pygame.sprite.Sprite):
 
     def hit(self):
         self.health -= 1
+        self.imageIndex += 1
+        if self.imageIndex < len(self.images):
+            self.image = self.images[self.imageIndex]
 
 
 def draw(win, paddle, ball, bricks, lives, back, sprites):
@@ -216,7 +225,9 @@ def main():
                 bricks.remove(brick)
 
         if lives <= 0:
+            all_sprites.remove(paddle)
             paddle = Paddle()
+            all_sprites.add(paddle)
             ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, 'black')
             bricks = generate_bricks(3)
             lives = 3
