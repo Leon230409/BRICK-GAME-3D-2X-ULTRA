@@ -137,7 +137,7 @@ def ball_brick_collision(brick, ball):
             brick.rect.x - ball.radius < ball.x < brick.rect.x + brick.width + ball.radius):
         print(" удар снизу")
         brick.hit()
-        # ball.set_positions(ball.x, ball.y + ball.VEL)
+        ball.set_position(ball.x, ball.y + ball.VEL)
         ball.set_vel(ball.x_vel, ball.y_vel * -1)
         return True
     # удар справа
@@ -157,7 +157,7 @@ def ball_brick_collision(brick, ball):
             brick.rect.x - ball.radius < ball.x < brick.rect.x + brick.width + ball.radius):
         print(" удар сверху")
         brick.hit()
-        # ball.set_positions(ball.x, ball.y - ball.VEL)
+        ball.set_positions(ball.x, ball.y - ball.VEL)
         ball.set_vel(ball.x_vel, ball.y_vel * -1)
         return True
 
