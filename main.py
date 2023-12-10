@@ -17,7 +17,7 @@ all_sprites = pygame.sprite.Group()
 # brick_sprites = pygame.sprite.Group()
 LIVES_FONT = pygame.font.SysFont("comicsans", 40)
 
-LEVEL = 3
+LEVEL = 1
 background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
 background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
 
@@ -197,16 +197,15 @@ def generate_bricks(level):
                 print(brick.rect.x, brick.rect.y)
     return brick_sprites
 
-
 lives = 3
 
-
 def main():
-    global lives
+    global lives, LEVEL, background_image
     clock = pygame.time.Clock()
 
     paddle = Paddle()
     all_sprites.add(paddle)
+
 
     ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
     bricks = generate_bricks(LEVEL)
@@ -233,12 +232,27 @@ def main():
             if brick.health <= 0:
                 bricks.remove(brick)
 
-        if lives <= 0:
+        if len(bricks) <= 0:
+            LEVEL += 1
             all_sprites.remove(paddle)
             paddle = Paddle()
             all_sprites.add(paddle)
-            ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, 'black')
+            ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
+                        gameLevels[LEVEL]["ballColor"])
             bricks = generate_bricks(LEVEL)
+            background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
+            background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+            lives = 3
+
+        if lives <= 0:
+            LEVEL = 0
+            all_sprites.remove(paddle)
+            paddle = Paddle()
+            all_sprites.add(paddle)
+            ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
+            bricks = generate_bricks(LEVEL)
+            background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
+            background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
             lives = 3
 
             lost_text = LIVES_FONT.render("HAHAHA YOU LOST!!!", 1, "red")

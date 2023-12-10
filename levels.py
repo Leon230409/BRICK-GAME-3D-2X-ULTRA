@@ -1,10 +1,13 @@
 gameLevels = {
     1: {"bckImg": 'images/IM1.JPG',
-        "ballColor": "black",
-        "textColor": "black",
-        "brickMap": [[1, 1, 1, 1, 1, 1, 1, 1],
-                     [0, 0, 0, 1, 1, 0, 0, 0],
-                     [1, 1, 1, 1, 1, 1, 1, 1]]},
+        "ballColor": "white",
+        "textColor": "white",
+        # "brickMap": [[1, 1, 1, 1, 1, 1, 1, 1],
+        #              [0, 0, 0, 1, 1, 0, 0, 0],
+        #              [1, 1, 1, 1, 1, 1, 1, 1]]},
+        "brickMap": [[0]*8,
+                     [0]*8,
+                     [0, 0, 0, 1, 1, 0, 0, 0]]},
 
     2: {"bckImg": 'images/IM2.JPG',
         "ballColor": "black",
