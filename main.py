@@ -4,18 +4,22 @@ import pygame
 from levels import gameLevels
 
 pygame.init()
+
 WIDTH, HEIGHT = 850, 600
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("BRICK BREAKER")
-background_image = pygame.image.load('images/IM3.JPG')
 FPS = 60
 PADDLE_WIDTH = 120
 PADDLE_HEIGHT = 10
 BALL_RADIUS = 10
 all_sprites = pygame.sprite.Group()
+
 # brick_sprites = pygame.sprite.Group()
 LIVES_FONT = pygame.font.SysFont("comicsans", 40)
 
+LEVEL = 3
+background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
+background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
 
 class Paddle(pygame.sprite.Sprite):
     VEL = 5
@@ -103,7 +107,7 @@ def draw(win, paddle, ball, bricks, lives, back, sprites):
     # for brick in bricks:
     #     brick.draw(win)
 
-    lives_text = LIVES_FONT.render(f"HP:{lives}", 1, 'black')
+    lives_text = LIVES_FONT.render(f"HP:{lives}", 1, gameLevels[LEVEL]["textColor"])
     win.blit(lives_text, (10, HEIGHT - lives_text.get_height() - 10))
 
     pygame.display.update()
@@ -184,7 +188,7 @@ def generate_bricks(level):
     brick_height = helpBrick.height
 
     gap = 5.55
-    bricksMatrix = gameLevels[level]
+    bricksMatrix = gameLevels[level]["brickMap"]
     for row in range(len(bricksMatrix)):
         for col in range(len(bricksMatrix[row])):
             if bricksMatrix[row][col] == 1:
@@ -204,8 +208,8 @@ def main():
     paddle = Paddle()
     all_sprites.add(paddle)
 
-    ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, 'black')
-    bricks = generate_bricks(5)
+    ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
+    bricks = generate_bricks(LEVEL)
     run = True
     while run:
         clock.tick(FPS)
@@ -234,7 +238,7 @@ def main():
             paddle = Paddle()
             all_sprites.add(paddle)
             ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, 'black')
-            bricks = generate_bricks(1)
+            bricks = generate_bricks(LEVEL)
             lives = 3
 
             lost_text = LIVES_FONT.render("HAHAHA YOU LOST!!!", 1, "red")
