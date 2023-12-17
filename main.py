@@ -1,25 +1,113 @@
+import pygame
 import math
 import random
-import pygame
 from levels import gameLevels
 
-pygame.init()
-
+# Constants
 WIDTH, HEIGHT = 850, 600
-win = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("BRICK BREAKER")
 FPS = 60
 PADDLE_WIDTH = 120
 PADDLE_HEIGHT = 10
 BALL_RADIUS = 10
-all_sprites = pygame.sprite.Group()
-
-# brick_sprites = pygame.sprite.Group()
 LIVES_FONT = pygame.font.SysFont("comicsans", 40)
-
 LEVEL = 1
-background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
-background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+
+# Game class
+class Game:
+    def __init__(self):
+        pygame.init()
+        self.win = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.display.set_caption("BRICK BREAKER")
+        self.clock = pygame.time.Clock()
+        self.all_sprites = pygame.sprite.Group()
+        self.initialize_game()
+
+    def initialize_game(self):
+        # Initialize game objects
+        self.paddle = Paddle()
+        self.ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
+        self.bricks = generate_bricks(LEVEL)
+        self.lives = 3
+
+        # Add sprites to the sprite group
+        self.all_sprites.add(self.paddle)
+        self.all_sprites.add(self.ball)
+        self.all_sprites.add(self.bricks)
+
+        # Load background image
+        self.background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
+        self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
+
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_a] and self.paddle.rect.x > 0:
+            self.paddle.move(-1)
+        if keys[pygame.K_d] and self.paddle.rect.x + self.paddle.width < WIDTH:
+            self.paddle.move(1)
+        return True
+
+    def update_game_state(self):
+        self.ball.move()
+        ball_collision(self.ball)
+        ball_paddle_collision(self.ball, self.paddle)
+        ball_flor_collision(self.ball, self.paddle)
+        for brick in self.bricks:
+            ball_brick_collision(brick, self.ball)
+            if brick.health <= 0:
+                self.bricks.remove(brick)
+
+        if len(self.bricks) <= 0:
+            self.load_next_level()
+
+        if self.lives <= 0:
+            self.reset_game()
+
+    def load_next_level(self):
+        global LEVEL
+        LEVEL += 1
+        self.all_sprites.remove(self.paddle)
+        self.paddle = Paddle()
+        self.all_sprites.add(self.paddle)
+        self.ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
+                         gameLevels[LEVEL]["ballColor"])
+        self.bricks = generate_bricks(LEVEL)
+        self.background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
+        self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
+        self.lives = 3
+
+    def reset_game(self):
+        global LEVEL
+        LEVEL = 0
+        self.all_sprites.remove(self.paddle)
+        self.paddle = Paddle()
+        self.all_sprites.add(self.paddle)
+        self.ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
+        self.bricks = generate_bricks(LEVEL)
+        self.background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
+        self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
+        self.lives = 3
+
+    def draw(self):
+        self.win.blit(self.background_image, self.background_image.get_rect())
+        self.all_sprites.update()
+        self.all_sprites.draw(self.win)
+        lives_text = LIVES_FONT.render(f"HP:{self.lives}", 1, gameLevels[LEVEL]["textColor"])
+        self.win.blit(lives_text, (10, HEIGHT - lives_text.get_height() - 10))
+        pygame.display.update()
+
+    def run(self):
+        run = True
+        while run:
+            run = self.handle_events()
+            self.update_game_state()
+            self.draw()
+            self.clock.tick(FPS)
+
+        pygame.quit()
+        quit()
 
 class Paddle(pygame.sprite.Sprite):
     VEL = 5
@@ -91,26 +179,26 @@ class Brick(pygame.sprite.Sprite):
             self.image = self.images[self.imageIndex]
 
 
-def draw(win, paddle, ball, bricks, lives, back, sprites):
-    # win.fill("white")
-    win.blit(back, back.get_rect())
-    # paddle.draw(win)
-
-    sprites.update()
-    sprites.draw(win)
-
-    bricks.update()
-    bricks.draw(win)
-
-    ball.draw(win)
-
-    # for brick in bricks:
-    #     brick.draw(win)
-
-    lives_text = LIVES_FONT.render(f"HP:{lives}", 1, gameLevels[LEVEL]["textColor"])
-    win.blit(lives_text, (10, HEIGHT - lives_text.get_height() - 10))
-
-    pygame.display.update()
+# def draw(win, paddle, ball, bricks, lives, back, sprites):
+#     # win.fill("white")
+#     win.blit(back, back.get_rect())
+#     # paddle.draw(win)
+#
+#     sprites.update()
+#     sprites.draw(win)
+#
+#     bricks.update()
+#     bricks.draw(win)
+#
+#     ball.draw(win)
+#
+#     # for brick in bricks:
+#     #     brick.draw(win)
+#
+#     lives_text = LIVES_FONT.render(f"HP:{lives}", 1, gameLevels[LEVEL]["textColor"])
+#     win.blit(lives_text, (10, HEIGHT - lives_text.get_height() - 10))
+#
+#     pygame.display.update()
 
 
 def ball_collision(ball):
@@ -199,70 +287,74 @@ def generate_bricks(level):
 
 lives = 3
 
-def main():
-    global lives, LEVEL, background_image
-    clock = pygame.time.Clock()
-
-    paddle = Paddle()
-    all_sprites.add(paddle)
-
-
-    ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
-    bricks = generate_bricks(LEVEL)
-    run = True
-    while run:
-        clock.tick(FPS)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-                break
-
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_a] and paddle.rect.x > 0:
-            paddle.move(-1)
-        if keys[pygame.K_d] and paddle.rect.x + paddle.width < WIDTH:
-            paddle.move(1)
-        ball.move()
-        ball_collision(ball)
-        ball_paddle_collision(ball, paddle)
-        ball_flor_collision(ball, paddle)
-        for brick in bricks:
-            ball_brick_collision(brick, ball)
-            if brick.health <= 0:
-                bricks.remove(brick)
-
-        if len(bricks) <= 0:
-            LEVEL += 1
-            all_sprites.remove(paddle)
-            paddle = Paddle()
-            all_sprites.add(paddle)
-            ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
-                        gameLevels[LEVEL]["ballColor"])
-            bricks = generate_bricks(LEVEL)
-            background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
-            background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
-            lives = 3
-
-        if lives <= 0:
-            LEVEL = 0
-            all_sprites.remove(paddle)
-            paddle = Paddle()
-            all_sprites.add(paddle)
-            ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
-            bricks = generate_bricks(LEVEL)
-            background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
-            background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
-            lives = 3
-
-            lost_text = LIVES_FONT.render("HAHAHA YOU LOST!!!", 1, "red")
-            win.blit(lost_text, (WIDTH / 2 - lost_text.get_width() / 2, HEIGHT / 2 - lost_text.get_height() / 2))
-            pygame.display.update()
-            pygame.time.delay(5000)
-        draw(win, paddle, ball, bricks, lives, background_image, all_sprites)
-    pygame.quit()
-    quit()
-
+# def main():
+#     global lives, LEVEL, background_image
+#     clock = pygame.time.Clock()
+#
+#     paddle = Paddle()
+#     all_sprites.add(paddle)
+#
+#
+#     ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
+#     bricks = generate_bricks(LEVEL)
+#     run = True
+#     while run:
+#         clock.tick(FPS)
+#
+#         for event in pygame.event.get():
+#             if event.type == pygame.QUIT:
+#                 run = False
+#                 break
+#
+#         keys = pygame.key.get_pressed()
+#         if keys[pygame.K_a] and paddle.rect.x > 0:
+#             paddle.move(-1)
+#         if keys[pygame.K_d] and paddle.rect.x + paddle.width < WIDTH:
+#             paddle.move(1)
+#         ball.move()
+#         ball_collision(ball)
+#         ball_paddle_collision(ball, paddle)
+#         ball_flor_collision(ball, paddle)
+#         for brick in bricks:
+#             ball_brick_collision(brick, ball)
+#             if brick.health <= 0:
+#                 bricks.remove(brick)
+#
+#         if len(bricks) <= 0:
+#             LEVEL += 1
+#             all_sprites.remove(paddle)
+#             paddle = Paddle()
+#             all_sprites.add(paddle)
+#             ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
+#                         gameLevels[LEVEL]["ballColor"])
+#             bricks = generate_bricks(LEVEL)
+#             background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
+#             background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+#             lives = 3
+#
+#         if lives <= 0:
+#             LEVEL = 0
+#             all_sprites.remove(paddle)
+#             paddle = Paddle()
+#             all_sprites.add(paddle)
+#             ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
+#             bricks = generate_bricks(LEVEL)
+#             background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
+#             background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+#             lives = 3
+#
+#             lost_text = LIVES_FONT.render("HAHAHA YOU LOST!!!", 1, "red")
+#             win.blit(lost_text, (WIDTH / 2 - lost_text.get_width() / 2, HEIGHT / 2 - lost_text.get_height() / 2))
+#             pygame.display.update()
+#             pygame.time.delay(5000)
+#         draw(win, paddle, ball, bricks, lives, background_image, all_sprites)
+#     pygame.quit()
+#     quit()
+#
+#
+# if __name__ == "__main__":
+#     main()
 
 if __name__ == "__main__":
-    main()
+    game = Game()
+    game.run()
