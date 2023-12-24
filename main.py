@@ -21,6 +21,7 @@ LEVEL = 1
 background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
 background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
 
+
 class Paddle(pygame.sprite.Sprite):
     VEL = 5
 
@@ -71,7 +72,7 @@ class Brick(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.health = health
         self.images = []
-        self.numDir = random.choice(range(1,4))
+        self.numDir = random.choice(range(1, 4))
         self.images.append(pygame.image.load(f'images/bt{self.numDir}/bt{self.numDir}_1.png'))
         self.images.append(pygame.image.load(f'images/bt{self.numDir}/bt{self.numDir}_2.png'))
         self.imageIndex = 0
@@ -82,7 +83,7 @@ class Brick(pygame.sprite.Sprite):
         self.rect.topleft = (x, y)
 
     # def draw(self, win):
-        # pygame.draw.rect(win, (self.x, self.y, self.width, self.height))
+    # pygame.draw.rect(win, (self.x, self.y, self.width, self.height))
 
     def hit(self):
         self.health -= 1
@@ -115,9 +116,9 @@ def draw(win, paddle, ball, bricks, lives, back, sprites):
 
 def ball_collision(ball):
     if ball.x - BALL_RADIUS <= 0:
-        ball.set_position(WIDTH - ball.radius*2, ball.y)
+        ball.set_position(WIDTH - ball.radius * 2, ball.y)
     elif ball.x + BALL_RADIUS >= WIDTH:
-        ball.set_position(0 + ball.radius*2, ball.y)
+        ball.set_position(0 + ball.radius * 2, ball.y)
 
     if ball.y - BALL_RADIUS <= 0:
         ball.set_vel(ball.x_vel, ball.y_vel * -1)
@@ -197,7 +198,9 @@ def generate_bricks(level):
                 print(brick.rect.x, brick.rect.y)
     return brick_sprites
 
+
 lives = 3
+
 
 def main():
     global lives, LEVEL, background_image
@@ -205,7 +208,6 @@ def main():
 
     paddle = Paddle()
     all_sprites.add(paddle)
-
 
     ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
     bricks = generate_bricks(LEVEL)
@@ -234,7 +236,7 @@ def main():
 
         if len(bricks) <= 0:
             LEVEL += 1
-            all_sprites.remove(paddle)
+            all_sprites = pygame.sprite.Group()
             paddle = Paddle()
             all_sprites.add(paddle)
             ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
@@ -245,11 +247,12 @@ def main():
             lives = 3
 
         if lives <= 0:
-            LEVEL = 0
-            all_sprites.remove(paddle)
+            LEVEL = 1
+            all_sprites = pygame.sprite.Group()
             paddle = Paddle()
             all_sprites.add(paddle)
-            ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
+            ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
+                        gameLevels[LEVEL]["ballColor"])
             bricks = generate_bricks(LEVEL)
             background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
             background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
