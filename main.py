@@ -17,7 +17,7 @@ all_sprites = pygame.sprite.Group()
 # brick_sprites = pygame.sprite.Group()
 LIVES_FONT = pygame.font.SysFont("comicsans", 40)
 
-LEVEL = 1
+LEVEL = 2
 background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
 background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
 
@@ -48,9 +48,8 @@ class Ball:
         self.y = y
         self.radius = radius
         self.color = color
-        self.x_vel = 0
-        self.y_vel = -self.VEL
-
+        self.x_vel = -self.VEL
+        self.y_vel = 0
     def move(self):
         self.x += self.x_vel
         self.y += self.y_vel
@@ -150,25 +149,26 @@ def ball_paddle_collision(ball, paddle):
 
 
 def ball_brick_collision(brick, ball):
+    if (ball.x + ball.radius >= brick.rect.x) and (ball.x + ball.radius < brick.rect.x + brick.width) and (
+            brick.rect.y <= ball.y-ball.radius <= brick.rect.bottom or brick.rect.y <= ball.y+ball.radius <= brick.rect.bottom):
+        print(" удар слева")
+        brick.hit()
+        ball.set_position(ball.x - ball.VEL, ball.y)
+        ball.set_vel(ball.x_vel * -1, ball.y_vel)
+        return True
+    if (ball.x - ball.radius <= brick.rect.x + brick.width) and (ball.x - ball.radius > brick.rect.x) and (
+            brick.rect.y <= ball.y-ball.radius <= brick.rect.bottom or brick.rect.y <= ball.y+ball.radius <= brick.rect.bottom):
+        print(" удар справа")
+        brick.hit()
+        ball.set_position(ball.x + ball.VEL, ball.y)
+        ball.set_vel(ball.x_vel * -1, ball.y_vel)
+        return True
     if (brick.rect.y < ball.y - ball.radius <= brick.rect.y + brick.height) and (
             brick.rect.x - ball.radius < ball.x < brick.rect.x + brick.width + ball.radius):
         print(" удар снизу")
         brick.hit()
         ball.set_position(ball.x, ball.y + ball.VEL)
         ball.set_vel(ball.x_vel, ball.y_vel * -1)
-        return True
-    # удар справа
-    if (ball.x + ball.radius >= brick.rect.x) and (ball.x + ball.radius < brick.rect.x + brick.width) and (
-            brick.rect.y < ball.y < brick.rect.y + brick.height):
-        print(" удар справа")
-        brick.hit()
-        ball.set_vel(ball.x_vel * -1, ball.y_vel)
-        return True
-    if (ball.x - ball.radius <= brick.rect.x + brick.width) and (ball.x - ball.radius > brick.rect.x) and (
-            brick.rect.y < ball.y < brick.rect.y + brick.height):
-        print(" удар слева")
-        brick.hit()
-        ball.set_vel(ball.x_vel * -1, ball.y_vel)
         return True
     if (brick.rect.y <= ball.y + ball.radius < brick.rect.y + brick.height) and (
             brick.rect.x - ball.radius < ball.x < brick.rect.x + brick.width + ball.radius):
@@ -209,7 +209,7 @@ def main():
     paddle = Paddle()
     all_sprites.add(paddle)
 
-    ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
+    ball = Ball(WIDTH-50, HEIGHT/4, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
     bricks = generate_bricks(LEVEL)
     run = True
     while run:
