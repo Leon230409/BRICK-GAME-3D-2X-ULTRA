@@ -17,7 +17,7 @@ all_sprites = pygame.sprite.Group()
 # brick_sprites = pygame.sprite.Group()
 LIVES_FONT = pygame.font.SysFont("comicsans", 40)
 
-LEVEL = 2
+LEVEL = 1
 background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
 background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
 
@@ -48,8 +48,8 @@ class Ball:
         self.y = y
         self.radius = radius
         self.color = color
-        self.x_vel = -self.VEL
-        self.y_vel = 0
+        self.x_vel = 0
+        self.y_vel = -self.VEL
     def move(self):
         self.x += self.x_vel
         self.y += self.y_vel
@@ -209,7 +209,7 @@ def main():
     paddle = Paddle()
     all_sprites.add(paddle)
 
-    ball = Ball(WIDTH-50, HEIGHT/4, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
+    ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS, gameLevels[LEVEL]["ballColor"])
     bricks = generate_bricks(LEVEL)
     run = True
     while run:
