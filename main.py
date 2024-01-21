@@ -2,7 +2,7 @@ import math
 import random
 import pygame
 from levels import gameLevels
-
+# Я написал этот восхитительный и очень нужный комментарий
 pygame.init()
 
 WIDTH, HEIGHT = 850, 600
@@ -203,7 +203,7 @@ lives = 3
 
 
 def main():
-    global lives, LEVEL, background_image
+    global lives, LEVEL, background_image, all_sprites
     clock = pygame.time.Clock()
 
     paddle = Paddle()
