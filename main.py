@@ -149,35 +149,40 @@ def ball_paddle_collision(ball, paddle):
 
 
 def ball_brick_collision(brick, ball):
-    if (ball.x + ball.radius >= brick.rect.x) and (ball.x + ball.radius < brick.rect.x + brick.width) and (
-            brick.rect.y <= ball.y-ball.radius <= brick.rect.bottom or brick.rect.y <= ball.y+ball.radius <= brick.rect.bottom):
-        print(" удар слева")
-        brick.hit()
-        ball.set_position(ball.x - ball.VEL, ball.y)
-        ball.set_vel(ball.x_vel * -1, ball.y_vel)
-        return True
-    if (ball.x - ball.radius <= brick.rect.x + brick.width) and (ball.x - ball.radius > brick.rect.x) and (
-            brick.rect.y <= ball.y-ball.radius <= brick.rect.bottom or brick.rect.y <= ball.y+ball.radius <= brick.rect.bottom):
-        print(" удар справа")
-        brick.hit()
-        ball.set_position(ball.x + ball.VEL, ball.y)
-        ball.set_vel(ball.x_vel * -1, ball.y_vel)
-        return True
-    if (brick.rect.y < ball.y - ball.radius <= brick.rect.y + brick.height) and (
-            brick.rect.x - ball.radius < ball.x < brick.rect.x + brick.width + ball.radius):
-        print(" удар снизу")
-        brick.hit()
-        ball.set_position(ball.x, ball.y + ball.VEL)
-        ball.set_vel(ball.x_vel, ball.y_vel * -1)
-        return True
-    if (brick.rect.y <= ball.y + ball.radius < brick.rect.y + brick.height) and (
-            brick.rect.x - ball.radius < ball.x < brick.rect.x + brick.width + ball.radius):
-        print(" удар сверху")
-        brick.hit()
-        ball.set_position(ball.x, ball.y - ball.VEL)
-        ball.set_vel(ball.x_vel, ball.y_vel * -1)
-        return True
+    # Рассчитываем ближайшие точки на кирпиче к центру шара
+    closest_x = max(brick.rect.x, min(ball.x, brick.rect.x + brick.rect.width))
+    closest_y = max(brick.rect.y, min(ball.y, brick.rect.y + brick.rect.height))
 
+    # Вычисляем расстояние между центром шара и ближайшей точкой на кирпиче
+    distance_x = ball.x - closest_x
+    distance_y = ball.y - closest_y
+
+    # Проверяем, с какой стороны было столкновение
+    if (distance_x ** 2 + distance_y ** 2) < ball.radius ** 2:
+        # Столкновение произошло
+        if distance_x > 0:
+            # Столкновение с правой стороной кирпича
+            print(" удар справа")
+            brick.hit()
+            ball.set_vel(ball.x_vel * -1, ball.y_vel)
+            return True
+        elif distance_x < 0:
+            # Столкновение с левой стороной кирпича
+            print(" удар слева")
+            brick.hit()
+            ball.set_vel(ball.x_vel * -1, ball.y_vel)
+            return True
+        elif distance_y > 0:
+            # Столкновение с нижней стороной кирпича
+            print(" удар снизу")
+            brick.hit()
+            ball.set_vel(ball.x_vel, ball.y_vel * -1)
+            return True
+        else:
+            # Столкновение с верхней стороной кирпича
+            print(" удар сверху")
+            brick.hit()
+            ball.set_vel(ball.x_vel, ball.y_vel * -1)
     return False
 
 
