@@ -160,30 +160,34 @@ def ball_brick_collision(brick, ball):
     # Проверяем, с какой стороны было столкновение
     if (distance_x ** 2 + distance_y ** 2) < ball.radius ** 2:
         # Столкновение произошло
-        if distance_x > 0:
+        if distance_y > 0:
+            # Столкновение с нижней стороной кирпича
+            print(" удар снизу")
+            brick.hit()
+            ball.set_vel(ball.x_vel, ball.y_vel * -1)
+            ball.set_position(ball.x, ball.y + ball.VEL)
+            return True
+        elif distance_y < 0:
+            # Столкновение с верхней стороной кирпича
+            print(" удар сверху")
+            brick.hit()
+            ball.set_vel(ball.x_vel, ball.y_vel * -1)
+            ball.set_position(ball.x, ball.y - ball.VEL)
+            return True
+        elif distance_x > 0:
             # Столкновение с правой стороной кирпича
             print(" удар справа")
             brick.hit()
             ball.set_vel(ball.x_vel * -1, ball.y_vel)
+            ball.set_position(ball.x + ball.VEL, ball.y)
             return True
         elif distance_x < 0:
             # Столкновение с левой стороной кирпича
             print(" удар слева")
             brick.hit()
             ball.set_vel(ball.x_vel * -1, ball.y_vel)
+            ball.set_position(ball.x - ball.VEL, ball.y)
             return True
-        elif distance_y > 0:
-            # Столкновение с нижней стороной кирпича
-            print(" удар снизу")
-            brick.hit()
-            ball.set_vel(ball.x_vel, ball.y_vel * -1)
-            return True
-        else:
-            # Столкновение с верхней стороной кирпича
-            print(" удар сверху")
-            brick.hit()
-            ball.set_vel(ball.x_vel, ball.y_vel * -1)
-    return False
 
 
 def generate_bricks(level):
