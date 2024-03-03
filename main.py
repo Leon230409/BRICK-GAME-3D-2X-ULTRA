@@ -145,32 +145,47 @@ class Game:
         y_vel = math.cos(angle_radians) * self.ball.VEL
         self.ball.set_vel(x_vel, y_vel * -1)
 
+
     def ball_brick_collision(self, brick):
-        if (brick.rect.y < self.ball.y - self.ball.radius <= brick.rect.bottom) and (
-                brick.rect.x - self.ball.radius < self.ball.x < brick.rect.right + self.ball.radius):
-            print(" удар снизу")
-            brick.hit()
-            self.ball.set_position(self.ball.x, self.ball.y + self.ball.VEL)
-            self.ball.set_vel(self.ball.x_vel, self.ball.y_vel * -1)
-        # удар справа
-        elif (self.ball.x + self.ball.radius >= brick.rect.x) and (
-                self.ball.x + self.ball.radius < brick.rect.right) and (brick.rect.y < self.ball.y < brick.rect.bottom):
-            print(" удар справа")
-            brick.hit()
-            self.ball.set_position(self.ball.x - self.ball.VEL, self.ball.y)
-            self.ball.set_vel(self.ball.x_vel * -1, self.ball.y_vel)
-        elif (self.ball.x - self.ball.radius <= brick.rect.right) and (
-                self.ball.x - self.ball.radius > brick.rect.x) and (brick.rect.y < self.ball.y < brick.rect.bottom):
-            print(" удар слева")
-            brick.hit()
-            self.ball.set_position(self.ball.x + self.ball.VEL, self.ball.y)
-            self.ball.set_vel(self.ball.x_vel * -1, self.ball.y_vel)
-        elif (brick.rect.y <= self.ball.y + self.ball.radius < brick.rect.bottom) and (
-                brick.rect.x - self.ball.radius < self.ball.x < brick.rect.right + self.ball.radius):
-            print(" удар сверху")
-            brick.hit()
-            self.ball.set_position(self.ball.x, self.ball.y - self.ball.VEL)
-            self.ball.set_vel(self.ball.x_vel, self.ball.y_vel * -1)
+        # Рассчитываем ближайшие точки на кирпиче к центру шара
+        closest_x = max(brick.rect.x, min(self.ball.x, brick.rect.x + brick.rect.width))
+        closest_y = max(brick.rect.y, min(self.ball.y, brick.rect.y + brick.rect.height))
+
+        # Вычисляем расстояние между центром шара и ближайшей точкой на кирпиче
+        distance_x = self.ball.x - closest_x
+        distance_y = self.ball.y - closest_y
+
+        # Проверяем, с какой стороны было столкновение
+        if (distance_x ** 2 + distance_y ** 2) < self.ball.radius ** 2:
+            # Столкновение произошло
+            if distance_y > 0:
+                # Столкновение с нижней стороной кирпича
+                print(" удар снизу")
+                brick.hit()
+                self.ball.set_vel(self.ball.x_vel, self.ball.y_vel * -1)
+                self.ball.set_position(self.ball.x, self.ball.y + self.ball.VEL)
+                return True
+            elif distance_y < 0:
+                # Столкновение с верхней стороной кирпича
+                print(" удар сверху")
+                brick.hit()
+                self.ball.set_vel(self.ball.x_vel, self.ball.y_vel * -1)
+                self.ball.set_position(self.ball.x, self.ball.y - self.ball.VEL)
+                return True
+            elif distance_x > 0:
+                # Столкновение с правой стороной кирпича
+                print(" удар справа")
+                brick.hit()
+                self.ball.set_vel(self.ball.x_vel * -1, self.ball.y_vel)
+                self.ball.set_position(self.ball.x + self.ball.VEL, self.ball.y)
+                return True
+            elif distance_x < 0:
+                # Столкновение с левой стороной кирпича
+                print(" удар слева")
+                brick.hit()
+                self.ball.set_vel(self.ball.x_vel * -1, self.ball.y_vel)
+                self.ball.set_position(self.ball.x - self.ball.VEL, self.ball.y)
+                return True
 
     def draw(self):
         self.win.blit(self.background_image, self.background_image.get_rect())
