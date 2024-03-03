@@ -195,6 +195,7 @@ class Game:
         quit()
 
 
+
 class Paddle(pygame.sprite.Sprite):
     VEL = 5
 
@@ -220,7 +221,6 @@ class Ball:
         self.color = color
         self.x_vel = 0
         self.y_vel = -self.VEL
-
     def move(self):
         self.x += self.x_vel
         self.y += self.y_vel
@@ -256,7 +256,7 @@ class Brick(pygame.sprite.Sprite):
         if self.imageIndex < len(self.images):
             self.image = self.images[self.imageIndex]
 
-
+            
 if __name__ == "__main__":
     game = Game()
     game.run()
