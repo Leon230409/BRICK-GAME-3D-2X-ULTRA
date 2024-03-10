@@ -18,7 +18,7 @@ LEVEL = 1
 class Game:
     def __init__(self):
         self.ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
-                         gameLevels[LEVEL]["ballColor"])
+                         gameLevels[LEVEL]["ballColor"], 5)
         self.paddle = Paddle()
         pygame.init()
         self.win = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -64,6 +64,9 @@ class Game:
             self.ball_brick_collision(brick)
             if brick.health <= 0:
                 self.bricks.remove(brick)
+                if brick.name == "speed":
+                    self.ball.VEL = 7
+
 
         if len(self.bricks) <= 0:
             self.load_next_level()
@@ -78,7 +81,7 @@ class Game:
         self.paddle = Paddle()
         self.all_sprites.add(self.paddle)
         self.ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
-                         gameLevels[LEVEL]["ballColor"])
+                         gameLevels[LEVEL]["ballColor"], 5)
         self.bricks = self.generate_bricks()
         self.background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
         self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
@@ -91,7 +94,7 @@ class Game:
         self.paddle = Paddle()
         self.all_sprites.add(self.paddle)
         self.ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
-                         gameLevels[LEVEL]["ballColor"])
+                         gameLevels[LEVEL]["ballColor"], 5)
         self.bricks = self.generate_bricks()
         self.background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
         self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
@@ -112,6 +115,10 @@ class Game:
                     brick = Brick(gap + col * (brick_width + gap), gap + row * (brick_height + gap), 2)
                     brick_sprites.add(brick)
                     print(brick.rect.x, brick.rect.y)
+                if bricksMatrix[row][col] == 2:
+                    brick = BonusBrick(gap + col * (brick_width + gap), gap + row * (brick_height + gap), 1)
+                    brick_sprites.add(brick)
+                    print(brick.rect.x, brick.rect.y)
         return brick_sprites
 
     def ball_collision(self, ball):
@@ -126,8 +133,9 @@ class Game:
     def ball_flor_collision(self):
         if self.ball.y + BALL_RADIUS >= HEIGHT:
             self.LIVES -= 1
+            self.ball.VEL = 5
             self.ball.set_position(self.paddle.rect.x + self.paddle.width // 2, self.paddle.rect.y - self.ball.radius)
-            self.ball.set_vel(0, -self.ball.VEL)
+            self.ball.set_vel(0, self.ball.y_vel * -1)
 
     def ball_paddle_collision(self):
         if not ((self.ball.x <= (self.paddle.rect.x + self.paddle.width)) and (self.ball.x >= self.paddle.rect.x)):
@@ -141,10 +149,9 @@ class Game:
         angle = percent_width * 90
         angle_radians = math.radians(angle)
 
-        x_vel = math.sin(angle_radians) * self.ball.VEL
-        y_vel = math.cos(angle_radians) * self.ball.VEL
+        x_vel = math.sin(angle_radians)
+        y_vel = math.cos(angle_radians)
         self.ball.set_vel(x_vel, y_vel * -1)
-
 
     def ball_brick_collision(self, brick):
         # Рассчитываем ближайшие точки на кирпиче к центру шара
@@ -210,7 +217,6 @@ class Game:
         quit()
 
 
-
 class Paddle(pygame.sprite.Sprite):
     VEL = 5
 
@@ -227,18 +233,18 @@ class Paddle(pygame.sprite.Sprite):
 
 
 class Ball:
-    VEL = 5
-
-    def __init__(self, x, y, radius, color):
+    def __init__(self, x, y, radius, color, speed):
         self.x = x
         self.y = y
         self.radius = radius
         self.color = color
+        self.VEL = speed
         self.x_vel = 0
-        self.y_vel = -self.VEL
+        self.y_vel = -1
+
     def move(self):
-        self.x += self.x_vel
-        self.y += self.y_vel
+        self.x += self.x_vel * self.VEL
+        self.y += self.y_vel * self.VEL
 
     def set_vel(self, x_vel, y_vel):
         self.x_vel = x_vel
@@ -255,6 +261,7 @@ class Ball:
 class Brick(pygame.sprite.Sprite):
     def __init__(self, x, y, health):
         pygame.sprite.Sprite.__init__(self)
+        self.name = "normal"
         self.health = health
         self.images = []
         self.numDir = random.choice(range(1, 4))
@@ -271,7 +278,15 @@ class Brick(pygame.sprite.Sprite):
         if self.imageIndex < len(self.images):
             self.image = self.images[self.imageIndex]
 
-            
+
+class BonusBrick(Brick):
+    def __init__(self, x, y, health):
+        super().__init__(x, y, health)
+        self.name = "speed"
+        self.images = [pygame.image.load(f'images/bt_speed.png')]
+        self.image = self.images[self.imageIndex]
+
+
 if __name__ == "__main__":
     game = Game()
     game.run()
