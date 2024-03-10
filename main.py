@@ -67,7 +67,6 @@ class Game:
                 if brick.name == "speed":
                     self.ball.VEL = 7
 
-
         if len(self.bricks) <= 0:
             self.load_next_level()
 
@@ -111,12 +110,10 @@ class Game:
         bricksMatrix = gameLevels[LEVEL]["brickMap"]
         for row in range(len(bricksMatrix)):
             for col in range(len(bricksMatrix[row])):
-                if bricksMatrix[row][col] == 1:
-                    brick = Brick(gap + col * (brick_width + gap), gap + row * (brick_height + gap), 2)
-                    brick_sprites.add(brick)
-                    print(brick.rect.x, brick.rect.y)
-                if bricksMatrix[row][col] == 2:
-                    brick = BonusBrick(gap + col * (brick_width + gap), gap + row * (brick_height + gap), 1)
+                brick_type = bricksMatrix[row][col]
+                if brick_type in [1, 2]:
+                    brick = BrickFactory.create_brick(gap + col * (brick_width + gap), gap + row * (brick_height + gap),
+                                                      brick_type)
                     brick_sprites.add(brick)
                     print(brick.rect.x, brick.rect.y)
         return brick_sprites
@@ -256,6 +253,17 @@ class Ball:
     def set_position(self, x, y):
         self.x = x
         self.y = y
+
+
+class BrickFactory:
+    @staticmethod
+    def create_brick(x, y, brick_type):
+        if brick_type == 1:
+            return Brick(x, y, 2)
+        elif brick_type == 2:
+            return BonusBrick(x, y, 1)
+        else:
+            raise ValueError("Unsupported brick type")
 
 
 class Brick(pygame.sprite.Sprite):
