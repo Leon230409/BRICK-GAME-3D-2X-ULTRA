@@ -14,6 +14,7 @@ LIVES_FONT = pygame.font.SysFont("comicsans", 40)
 LEVEL = 1
 
 
+
 # Game class
 class Game:
     def __init__(self):
@@ -28,6 +29,7 @@ class Game:
         self.bricks = pygame.sprite.Group()
         self.initialize_game()
         self.LIVES = 3
+        self.FORCE = False
 
     def initialize_game(self):
         # Initialize game objects
@@ -66,12 +68,16 @@ class Game:
                 self.bricks.remove(brick)
                 if brick.name == "speed":
                     self.ball.VEL = 7
+                elif brick.name == 'force':
+                    self.FORCE = True
 
         if len(self.bricks) <= 0:
             self.load_next_level()
 
+
         if self.LIVES <= 0:
             self.reset_game()
+
 
     def load_next_level(self):
         global LEVEL
@@ -85,6 +91,7 @@ class Game:
         self.background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
         self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
         self.LIVES = 3
+        self.FORCE = False
 
     def reset_game(self):
         global LEVEL
@@ -111,7 +118,7 @@ class Game:
         for row in range(len(bricksMatrix)):
             for col in range(len(bricksMatrix[row])):
                 brick_type = bricksMatrix[row][col]
-                if brick_type in [1, 2]:
+                if brick_type in [1, 2, 3]:
                     brick = BrickFactory.create_brick(gap + col * (brick_width + gap), gap + row * (brick_height + gap),
                                                       brick_type)
                     brick_sprites.add(brick)
@@ -119,17 +126,24 @@ class Game:
         return brick_sprites
 
     def ball_collision(self, ball):
-        if ball.x - BALL_RADIUS <= 0:
-            ball.set_position(WIDTH - ball.radius * 2, ball.y)
-        elif ball.x + BALL_RADIUS >= WIDTH:
-            ball.set_position(0 + ball.radius * 2, ball.y)
+        if not self.FORCE:
+            if ball.x - BALL_RADIUS <= 0 or ball.x + BALL_RADIUS >= WIDTH:
+                ball.set_vel(ball.x_vel * -1, ball.y_vel)
+            if ball.y - BALL_RADIUS <= 0:
+                ball.set_vel(ball.x_vel, ball.y_vel * -1)
+        else:
+            if ball.x - BALL_RADIUS <= 0:
+                ball.set_position(WIDTH - ball.radius * 2, ball.y)
+            elif ball.x + BALL_RADIUS >= WIDTH:
+                ball.set_position(0 + ball.radius * 2, ball.y)
 
-        if ball.y - BALL_RADIUS <= 0:
-            ball.set_vel(ball.x_vel, ball.y_vel * -1)
+            if ball.y - BALL_RADIUS <= 0:
+                ball.set_vel(ball.x_vel, ball.y_vel * -1)
 
     def ball_flor_collision(self):
         if self.ball.y + BALL_RADIUS >= HEIGHT:
             self.LIVES -= 1
+            self.FORCE = False
             self.ball.VEL = 5
             self.ball.set_position(self.paddle.rect.x + self.paddle.width // 2, self.paddle.rect.y - self.ball.radius)
             self.ball.set_vel(0, self.ball.y_vel * -1)
@@ -261,7 +275,9 @@ class BrickFactory:
         if brick_type == 1:
             return Brick(x, y, 2)
         elif brick_type == 2:
-            return BonusBrick(x, y, 1)
+            return BonusBrick(x, y)
+        elif brick_type == 3:
+            return  ForceBrick(x, y)
         else:
             raise ValueError("Unsupported brick type")
 
@@ -288,10 +304,17 @@ class Brick(pygame.sprite.Sprite):
 
 
 class BonusBrick(Brick):
-    def __init__(self, x, y, health):
-        super().__init__(x, y, health)
+    def __init__(self, x, y):
+        super().__init__(x, y, 1)
         self.name = "speed"
         self.images = [pygame.image.load(f'images/bt_speed.png')]
+        self.image = self.images[self.imageIndex]
+
+class ForceBrick(Brick):
+    def __init__(self, x, y):
+        super().__init__(x, y, 1)
+        self.name = "force"
+        self.images = [pygame.image.load(f'images/bt_force.png')]
         self.image = self.images[self.imageIndex]
 
 

@@ -7,7 +7,7 @@ gameLevels = {
         #              [1, 1, 1, 1, 1, 1, 1, 1]]},
         "brickMap": [[0]*8,
                      [0]*8,
-                     [0, 0, 0, 2, 2, 0, 0, 0]]},
+                     [0, 0, 0, 3, 3, 0, 0, 0]]},
 
     2: {"bckImg": 'images/IM2.JPG',
         "ballColor": "black",
