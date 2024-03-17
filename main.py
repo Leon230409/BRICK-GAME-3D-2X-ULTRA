@@ -1,6 +1,8 @@
 import pygame
 import math
 import random
+
+from brick import brickTypes
 from levels import gameLevels
 
 # Constants
@@ -64,6 +66,8 @@ class Game:
             self.ball_brick_collision(brick)
             if brick.health <= 0:
                 self.bricks.remove(brick)
+                # if brick.name == "speed":
+                    
 
         if len(self.bricks) <= 0:
             self.load_next_level()
@@ -100,7 +104,7 @@ class Game:
     def generate_bricks(self):
         brick_sprites = pygame.sprite.Group()
 
-        helpBrick = Brick(-100, -100, 0)
+        helpBrick = Brick(-100, -100, 1)
         brick_width = helpBrick.rect.width
         brick_height = helpBrick.rect.height
 
@@ -108,8 +112,8 @@ class Game:
         bricksMatrix = gameLevels[LEVEL]["brickMap"]
         for row in range(len(bricksMatrix)):
             for col in range(len(bricksMatrix[row])):
-                if bricksMatrix[row][col] == 1:
-                    brick = Brick(gap + col * (brick_width + gap), gap + row * (brick_height + gap), 2)
+                if bricksMatrix[row][col]:
+                    brick = Brick(gap + col * (brick_width + gap), gap + row * (brick_height + gap), bricksMatrix[row][col])
                     brick_sprites.add(brick)
                     print(brick.rect.x, brick.rect.y)
         return brick_sprites
@@ -253,13 +257,18 @@ class Ball:
 
 
 class Brick(pygame.sprite.Sprite):
-    def __init__(self, x, y, health):
+    def __init__(self, x, y, type):
         pygame.sprite.Sprite.__init__(self)
-        self.health = health
+        self.type = type
+        self.name = brickTypes[type]["name"]
+        self.health = brickTypes[type]["health"]
         self.images = []
-        self.numDir = random.choice(range(1, 4))
-        self.images.extend([pygame.image.load(f'images/bt{self.numDir}/bt{self.numDir}_1.png'),
-                            pygame.image.load(f'images/bt{self.numDir}/bt{self.numDir}_2.png')])
+        if self.type == 1:
+            self.numDir = random.choice(range(1, 4))
+            self.images.extend([pygame.image.load(f'images/bt/bt{self.numDir}/bt{self.numDir}_1.png'),
+                                pygame.image.load(f'images/bt/bt{self.numDir}/bt{self.numDir}_2.png')])
+        elif self.type == 2:
+            self.images.append(pygame.image.load(f'images/bt_speed/bt_speed.png'))
         self.imageIndex = 0
         self.image = self.images[self.imageIndex]
         self.rect = self.image.get_rect()
