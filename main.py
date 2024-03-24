@@ -18,7 +18,7 @@ LEVEL = 1
 # Game class
 class Game:
     def __init__(self):
-        self.ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
+        self.ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 50 - BALL_RADIUS, BALL_RADIUS,
                          gameLevels[LEVEL]["ballColor"], 5)
         self.paddle = Paddle()
         pygame.init()
@@ -50,10 +50,12 @@ class Game:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a] and self.paddle.rect.x > 0:
             self.paddle.move(-1)
-        if keys[pygame.K_d] and self.paddle.rect.x + self.paddle.width < WIDTH:
+        if keys[pygame.K_d] and self.paddle.rect.x + self.paddle.rect.width < WIDTH:
             self.paddle.move(1)
         if keys[pygame.K_z]:
             print("STOP")
+        if keys[pygame.K_f]:
+            self.paddle.set_plus_size()
         return True
 
     def update_game_state(self):
@@ -70,6 +72,9 @@ class Game:
                     self.ball.VEL = 7
                 elif brick.name == 'force':
                     self.FORCE = True
+                elif brick.name == 'longPaddle':
+                    self.paddle.set_plus_size()
+
 
         if len(self.bricks) <= 0:
             self.load_next_level()
@@ -92,6 +97,7 @@ class Game:
         self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
         self.LIVES = 3
         self.FORCE = False
+
 
     def reset_game(self):
         global LEVEL
@@ -118,7 +124,7 @@ class Game:
         for row in range(len(bricksMatrix)):
             for col in range(len(bricksMatrix[row])):
                 brick_type = bricksMatrix[row][col]
-                if brick_type in [1, 2, 3]:
+                if brick_type in [1, 2, 3, 4]:
                     brick = BrickFactory.create_brick(gap + col * (brick_width + gap), gap + row * (brick_height + gap),
                                                       brick_type)
                     brick_sprites.add(brick)
@@ -145,24 +151,23 @@ class Game:
             self.LIVES -= 1
             self.FORCE = False
             self.ball.VEL = 5
-            self.ball.set_position(self.paddle.rect.x + self.paddle.width // 2, self.paddle.rect.y - self.ball.radius)
+            self.ball.set_position(self.paddle.rect.x + self.paddle.rect.width // 2, self.paddle.rect.y - self.ball.radius)
             self.ball.set_vel(0, self.ball.y_vel * -1)
 
     def ball_paddle_collision(self):
-        if not ((self.ball.x <= (self.paddle.rect.x + self.paddle.width)) and (self.ball.x >= self.paddle.rect.x)):
-            return
-        if not (self.ball.y + self.ball.radius >= self.paddle.rect.y):
-            return
 
-        distance_to_center = self.ball.x - self.paddle.rect.centerx
+        if (self.paddle.rect.x <= self.ball.x <= self.paddle.rect.right) and (self.ball.y + self.ball.radius >= self.paddle.rect.y):
 
-        percent_width = distance_to_center / self.paddle.width
-        angle = percent_width * 90
-        angle_radians = math.radians(angle)
+            distance_to_center = self.ball.x - self.paddle.rect.centerx
 
-        x_vel = math.sin(angle_radians)
-        y_vel = math.cos(angle_radians)
-        self.ball.set_vel(x_vel, y_vel * -1)
+            percent_width = distance_to_center / self.paddle.rect.width
+            angle = percent_width * 90
+            angle_radians = math.radians(angle)
+
+            x_vel = math.sin(angle_radians)
+            y_vel = math.cos(angle_radians)
+            self.ball.set_vel(x_vel, y_vel * -1)
+        return
 
     def ball_brick_collision(self, brick):
         # Рассчитываем ближайшие точки на кирпиче к центру шара
@@ -235,13 +240,19 @@ class Paddle(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load('images/paddle.png')
         self.rect = self.image.get_rect()
-        self.width = self.rect[2]
+        self.normalWidth = self.rect.width
         self.height = self.rect[3]
         self.rect.center = (WIDTH // 2, HEIGHT - self.height)
 
     def move(self, direction):
         self.rect.x = self.rect.x + self.VEL * direction
+    def set_plus_size(self):
+        center = self.rect.center
+        self.rect.width = self.normalWidth * 1.5
 
+        self.rect.center = center
+        self.image = pygame.transform.scale(self.image, (self.rect.width, self.rect.height))
+        print(self.rect.size)
 
 class Ball:
     def __init__(self, x, y, radius, color, speed):
@@ -277,7 +288,9 @@ class BrickFactory:
         elif brick_type == 2:
             return BonusBrick(x, y)
         elif brick_type == 3:
-            return  ForceBrick(x, y)
+            return ForceBrick(x, y)
+        elif brick_type == 4:
+            return LongPaddleBrick(x, y)
         else:
             raise ValueError("Unsupported brick type")
 
@@ -316,6 +329,15 @@ class ForceBrick(Brick):
         self.name = "force"
         self.images = [pygame.image.load(f'images/bt_force.png')]
         self.image = self.images[self.imageIndex]
+
+
+class LongPaddleBrick(Brick):
+    def __init__(self, x, y):
+        super().__init__(x, y, 1)
+        self.name = "longPaddle"
+        self.images = [pygame.image.load(f'images/bt_longPaddle.png')]
+        self.image = self.images[self.imageIndex]
+
 
 
 if __name__ == "__main__":
