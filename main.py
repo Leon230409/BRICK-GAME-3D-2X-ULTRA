@@ -15,12 +15,11 @@ LIVES_FONT = pygame.font.SysFont("comicsans", 40)
 LEVEL = 1
 
 
-
 # Game class
 class Game:
     def __init__(self):
-        self.ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 50 - BALL_RADIUS, BALL_RADIUS,
-                         gameLevels[LEVEL]["ballColor"], 5)
+        self.mass_balls = [Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 50 - BALL_RADIUS, BALL_RADIUS,
+                                gameLevels[LEVEL]["ballColor"], 5)]
         self.paddle = Paddle()
         pygame.init()
         self.win = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -48,6 +47,10 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
+            elif event.type == pygame.KEYDOWN:  # Обработка нажатия клавиши
+                if event.key == pygame.K_SPACE:  # Пример: если нажата клавиша Пробел
+                    self.generate_balls()
+
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a] and self.paddle.rect.x > 0:
             self.paddle.move(-1)
@@ -60,30 +63,31 @@ class Game:
         return True
 
     def update_game_state(self):
-        self.ball.move()
-        self.ball_collision(self.ball)
+        for ball in self.mass_balls:
+            ball.move()
+            self.ball_collision(ball)
+
         self.ball_paddle_collision()
         self.ball_flor_collision()
 
         for brick in self.bricks:
+
             self.ball_brick_collision(brick)
             if brick.health <= 0:
                 self.bricks.remove(brick)
                 if brick.name == "speed":
-                    self.ball.VEL = 7
+                    for ball in self.mass_balls:
+                        ball.VEL = 7
                 elif brick.name == 'force':
                     self.FORCE = True
                 elif brick.name == 'longPaddle':
                     self.paddle.set_plus_size()
 
-
         if len(self.bricks) <= 0:
             self.load_next_level()
 
-
         if self.LIVES <= 0:
             self.reset_game()
-
 
     def load_next_level(self):
         global LEVEL
@@ -91,14 +95,13 @@ class Game:
         self.all_sprites.remove(self.paddle)
         self.paddle = Paddle()
         self.all_sprites.add(self.paddle)
-        self.ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
-                         gameLevels[LEVEL]["ballColor"], 5)
+        self.mass_balls = [Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
+                                gameLevels[LEVEL]["ballColor"], 5)]
         self.bricks = self.generate_bricks()
         self.background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
         self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
         self.LIVES = 3
         self.FORCE = False
-
 
     def reset_game(self):
         global LEVEL
@@ -106,8 +109,8 @@ class Game:
         self.all_sprites.remove(self.paddle)
         self.paddle = Paddle()
         self.all_sprites.add(self.paddle)
-        self.ball = Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
-                         gameLevels[LEVEL]["ballColor"], 5)
+        self.mass_balls = [Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
+                                gameLevels[LEVEL]["ballColor"], 5)]
         self.bricks = self.generate_bricks()
         self.background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
         self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
@@ -132,6 +135,11 @@ class Game:
                     print(brick.rect.x, brick.rect.y)
         return brick_sprites
 
+    def generate_balls(self):
+        self.mass_balls.append(Ball(self.paddle.rect.x + self.paddle.rect.width // 2, self.paddle.rect.y - 5 - BALL_RADIUS, BALL_RADIUS,
+                                gameLevels[LEVEL]["ballColor"], 5))
+
+
     def ball_collision(self, ball):
         if not self.FORCE:
             if ball.x - BALL_RADIUS <= 0 or ball.x + BALL_RADIUS >= WIDTH:
@@ -148,68 +156,70 @@ class Game:
                 ball.set_vel(ball.x_vel, ball.y_vel * -1)
 
     def ball_flor_collision(self):
-        if self.ball.y + BALL_RADIUS >= HEIGHT:
-            self.LIVES -= 1
-            self.FORCE = False
-            self.ball.VEL = 5
-            self.ball.set_position(self.paddle.rect.x + self.paddle.rect.width // 2, self.paddle.rect.y - self.ball.radius)
-            self.ball.set_vel(0, self.ball.y_vel * -1)
+        for ball in self.mass_balls:
+            if ball.y + BALL_RADIUS >= HEIGHT:
+                self.mass_balls.remove(ball)
+                if not self.mass_balls:
+                    self.LIVES -= 1
+                    self.FORCE = False
+                    self.generate_balls()
 
     def ball_paddle_collision(self):
+        for ball in self.mass_balls:
+            if (self.paddle.rect.x <= ball.x <= self.paddle.rect.right) and (
+                    ball.y + ball.radius >= self.paddle.rect.y):
+                distance_to_center = ball.x - self.paddle.rect.centerx
 
-        if (self.paddle.rect.x <= self.ball.x <= self.paddle.rect.right) and (self.ball.y + self.ball.radius >= self.paddle.rect.y):
+                percent_width = distance_to_center / self.paddle.rect.width
+                angle = percent_width * 90
+                angle_radians = math.radians(angle)
 
-            distance_to_center = self.ball.x - self.paddle.rect.centerx
-
-            percent_width = distance_to_center / self.paddle.rect.width
-            angle = percent_width * 90
-            angle_radians = math.radians(angle)
-
-            x_vel = math.sin(angle_radians)
-            y_vel = math.cos(angle_radians)
-            self.ball.set_vel(x_vel, y_vel * -1)
-        return
+                x_vel = math.sin(angle_radians)
+                y_vel = math.cos(angle_radians)
+                ball.set_vel(x_vel, y_vel * -1)
+        # return
 
     def ball_brick_collision(self, brick):
-        # Рассчитываем ближайшие точки на кирпиче к центру шара
-        closest_x = max(brick.rect.x, min(self.ball.x, brick.rect.x + brick.rect.width))
-        closest_y = max(brick.rect.y, min(self.ball.y, brick.rect.y + brick.rect.height))
+        for ball in self.mass_balls:
+            # Рассчитываем ближайшие точки на кирпиче к центру шара
+            closest_x = max(brick.rect.x, min(ball.x, brick.rect.x + brick.rect.width))
+            closest_y = max(brick.rect.y, min(ball.y, brick.rect.y + brick.rect.height))
 
-        # Вычисляем расстояние между центром шара и ближайшей точкой на кирпиче
-        distance_x = self.ball.x - closest_x
-        distance_y = self.ball.y - closest_y
+            # Вычисляем расстояние между центром шара и ближайшей точкой на кирпиче
+            distance_x = ball.x - closest_x
+            distance_y = ball.y - closest_y
 
-        # Проверяем, с какой стороны было столкновение
-        if (distance_x ** 2 + distance_y ** 2) < self.ball.radius ** 2:
-            # Столкновение произошло
-            if distance_y > 0:
-                # Столкновение с нижней стороной кирпича
-                print(" удар снизу")
-                brick.hit()
-                self.ball.set_vel(self.ball.x_vel, self.ball.y_vel * -1)
-                self.ball.set_position(self.ball.x, self.ball.y + self.ball.VEL)
-                return True
-            elif distance_y < 0:
-                # Столкновение с верхней стороной кирпича
-                print(" удар сверху")
-                brick.hit()
-                self.ball.set_vel(self.ball.x_vel, self.ball.y_vel * -1)
-                self.ball.set_position(self.ball.x, self.ball.y - self.ball.VEL)
-                return True
-            elif distance_x > 0:
-                # Столкновение с правой стороной кирпича
-                print(" удар справа")
-                brick.hit()
-                self.ball.set_vel(self.ball.x_vel * -1, self.ball.y_vel)
-                self.ball.set_position(self.ball.x + self.ball.VEL, self.ball.y)
-                return True
-            elif distance_x < 0:
-                # Столкновение с левой стороной кирпича
-                print(" удар слева")
-                brick.hit()
-                self.ball.set_vel(self.ball.x_vel * -1, self.ball.y_vel)
-                self.ball.set_position(self.ball.x - self.ball.VEL, self.ball.y)
-                return True
+            # Проверяем, с какой стороны было столкновение
+            if (distance_x ** 2 + distance_y ** 2) < ball.radius ** 2:
+                # Столкновение произошло
+                if distance_y > 0:
+                    # Столкновение с нижней стороной кирпича
+                    print(" удар снизу")
+                    brick.hit()
+                    ball.set_vel(ball.x_vel, ball.y_vel * -1)
+                    ball.set_position(ball.x, ball.y + ball.VEL)
+                    return True
+                elif distance_y < 0:
+                    # Столкновение с верхней стороной кирпича
+                    print(" удар сверху")
+                    brick.hit()
+                    ball.set_vel(ball.x_vel, ball.y_vel * -1)
+                    ball.set_position(ball.x, ball.y - ball.VEL)
+                    return True
+                elif distance_x > 0:
+                    # Столкновение с правой стороной кирпича
+                    print(" удар справа")
+                    brick.hit()
+                    ball.set_vel(ball.x_vel * -1, ball.y_vel)
+                    ball.set_position(ball.x + ball.VEL, ball.y)
+                    return True
+                elif distance_x < 0:
+                    # Столкновение с левой стороной кирпича
+                    print(" удар слева")
+                    brick.hit()
+                    ball.set_vel(ball.x_vel * -1, ball.y_vel)
+                    ball.set_position(ball.x - ball.VEL, ball.y)
+                    return True
 
     def draw(self):
         self.win.blit(self.background_image, self.background_image.get_rect())
@@ -217,7 +227,8 @@ class Game:
         self.all_sprites.draw(self.win)
         self.bricks.update()
         self.bricks.draw(self.win)
-        self.ball.draw(self.win)
+        for ball in self.mass_balls:
+            ball.draw(self.win)
         lives_text = LIVES_FONT.render(f"HP:{self.LIVES}", 1, gameLevels[LEVEL]["textColor"])
         self.win.blit(lives_text, (10, HEIGHT - lives_text.get_height() - 10))
         pygame.display.update()
@@ -247,6 +258,7 @@ class Paddle(pygame.sprite.Sprite):
 
     def move(self, direction):
         self.rect.x = self.rect.x + self.VEL * direction
+
     def set_plus_size(self):
         center = self.rect.center
         self.rect.width = self.normalWidth * 1.5
@@ -254,6 +266,7 @@ class Paddle(pygame.sprite.Sprite):
         self.rect.center = center
         self.image = pygame.transform.scale(self.image, (self.rect.width, self.rect.height))
         print(self.rect.size)
+
 
 class Ball:
     def __init__(self, x, y, radius, color, speed):
@@ -324,6 +337,7 @@ class BonusBrick(Brick):
         self.images = [pygame.image.load(f'images/bt_speed.png')]
         self.image = self.images[self.imageIndex]
 
+
 class ForceBrick(Brick):
     def __init__(self, x, y):
         super().__init__(x, y, 1)
@@ -338,7 +352,6 @@ class LongPaddleBrick(Brick):
         self.name = "longPaddle"
         self.images = [pygame.image.load(f'images/bt_longPaddle.png')]
         self.image = self.images[self.imageIndex]
-
 
 
 if __name__ == "__main__":
