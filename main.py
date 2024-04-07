@@ -2,6 +2,7 @@ import pygame
 import math
 import random
 from levels import gameLevels
+import os
 
 # Constants
 WIDTH, HEIGHT = 850, 600
