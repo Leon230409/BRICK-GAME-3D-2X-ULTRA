@@ -31,6 +31,7 @@ class Game:
         self.LIVES = 3
         self.FORCE = False
 
+
     def initialize_game(self):
         # Initialize game objects
         self.bricks = self.generate_bricks()
@@ -49,7 +50,8 @@ class Game:
                 return False
             elif event.type == pygame.KEYDOWN:  # Обработка нажатия клавиши
                 if event.key == pygame.K_SPACE:  # Пример: если нажата клавиша Пробел
-                    self.generate_balls()
+                    self.ballsX2()
+
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a] and self.paddle.rect.x > 0:
@@ -60,6 +62,7 @@ class Game:
             print("STOP")
         if keys[pygame.K_f]:
             self.paddle.set_plus_size()
+
         return True
 
     def update_game_state(self):
@@ -72,16 +75,18 @@ class Game:
 
         for brick in self.bricks:
 
-            self.ball_brick_collision(brick)
+            ball = self.ball_brick_collision(brick)
             if brick.health <= 0:
                 self.bricks.remove(brick)
                 if brick.name == "speed":
-                    for ball in self.mass_balls:
-                        ball.VEL = 7
+                    for b in self.mass_balls:
+                        b.VEL = 7
                 elif brick.name == 'force':
                     self.FORCE = True
                 elif brick.name == 'longPaddle':
                     self.paddle.set_plus_size()
+                elif brick.name == 'X2Ball':
+                    self.ballsX2(ball)
 
         if len(self.bricks) <= 0:
             self.load_next_level()
@@ -128,16 +133,22 @@ class Game:
         for row in range(len(bricksMatrix)):
             for col in range(len(bricksMatrix[row])):
                 brick_type = bricksMatrix[row][col]
-                if brick_type in [1, 2, 3, 4]:
+                if brick_type in [1, 2, 3, 4, 5]:
                     brick = BrickFactory.create_brick(gap + col * (brick_width + gap), gap + row * (brick_height + gap),
                                                       brick_type)
                     brick_sprites.add(brick)
                     print(brick.rect.x, brick.rect.y)
         return brick_sprites
 
-    def generate_balls(self):
+    def generate_ball(self):
         self.mass_balls.append(Ball(self.paddle.rect.x + self.paddle.rect.width // 2, self.paddle.rect.y - 5 - BALL_RADIUS, BALL_RADIUS,
                                 gameLevels[LEVEL]["ballColor"], 5))
+
+    def ballsX2(self, ball):
+        newBall = Ball(ball.x, ball.y, ball.radius, ball.color, ball.VEL)
+        newBall.set_vel(ball.x_vel * -1, ball.y_vel)
+        self.mass_balls.append(newBall)
+        print()
 
 
     def ball_collision(self, ball):
@@ -162,7 +173,7 @@ class Game:
                 if not self.mass_balls:
                     self.LIVES -= 1
                     self.FORCE = False
-                    self.generate_balls()
+                    self.generate_ball()
 
     def ball_paddle_collision(self):
         for ball in self.mass_balls:
@@ -198,28 +209,28 @@ class Game:
                     brick.hit()
                     ball.set_vel(ball.x_vel, ball.y_vel * -1)
                     ball.set_position(ball.x, ball.y + ball.VEL)
-                    return True
+                    return ball
                 elif distance_y < 0:
                     # Столкновение с верхней стороной кирпича
                     print(" удар сверху")
                     brick.hit()
                     ball.set_vel(ball.x_vel, ball.y_vel * -1)
                     ball.set_position(ball.x, ball.y - ball.VEL)
-                    return True
+                    return ball
                 elif distance_x > 0:
                     # Столкновение с правой стороной кирпича
                     print(" удар справа")
                     brick.hit()
                     ball.set_vel(ball.x_vel * -1, ball.y_vel)
                     ball.set_position(ball.x + ball.VEL, ball.y)
-                    return True
+                    return ball
                 elif distance_x < 0:
                     # Столкновение с левой стороной кирпича
                     print(" удар слева")
                     brick.hit()
                     ball.set_vel(ball.x_vel * -1, ball.y_vel)
                     ball.set_position(ball.x - ball.VEL, ball.y)
-                    return True
+                    return ball
 
     def draw(self):
         self.win.blit(self.background_image, self.background_image.get_rect())
@@ -305,6 +316,8 @@ class BrickFactory:
             return ForceBrick(x, y)
         elif brick_type == 4:
             return LongPaddleBrick(x, y)
+        elif brick_type == 5:
+            return X2BallBrick(x, y)
         else:
             raise ValueError("Unsupported brick type")
 
@@ -351,6 +364,15 @@ class LongPaddleBrick(Brick):
         super().__init__(x, y, 1)
         self.name = "longPaddle"
         self.images = [pygame.image.load(f'images/bt_longPaddle.png')]
+        self.image = self.images[self.imageIndex]
+
+
+
+class X2BallBrick(Brick):
+    def __init__(self, x, y):
+        super().__init__(x, y, 1)
+        self.name = "X2Ball"
+        self.images = [pygame.image.load(f'images/bt_balls.png')]
         self.image = self.images[self.imageIndex]
 
 
