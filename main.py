@@ -50,7 +50,7 @@ class Game:
                 return False
             elif event.type == pygame.KEYDOWN:  # Обработка нажатия клавиши
                 if event.key == pygame.K_SPACE:  # Пример: если нажата клавиша Пробел
-                    self.ballsX2()
+                    self.ballsX2(self.mass_balls[0])
 
 
         keys = pygame.key.get_pressed()
@@ -153,9 +153,10 @@ class Game:
 
     def ball_collision(self, ball):
         if not self.FORCE:
-            if ball.x - BALL_RADIUS <= 0 or ball.x + BALL_RADIUS >= WIDTH:
+            if ball.x + BALL_RADIUS <= BALL_RADIUS*2 or ball.x - BALL_RADIUS >= WIDTH - BALL_RADIUS*2:
                 ball.set_vel(ball.x_vel * -1, ball.y_vel)
-            if ball.y - BALL_RADIUS <= 0:
+
+            if ball.y + BALL_RADIUS <= BALL_RADIUS*2:
                 ball.set_vel(ball.x_vel, ball.y_vel * -1)
         else:
             if ball.x - BALL_RADIUS <= 0:
