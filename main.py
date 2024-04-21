@@ -80,13 +80,20 @@ class Game:
                 self.bricks.remove(brick)
                 if brick.name == "speed":
                     for b in self.mass_balls:
-                        b.VEL = 7
+                        if b.VEL < 7:
+                            b.VEL += 2
                 elif brick.name == 'force':
                     self.FORCE = True
                 elif brick.name == 'longPaddle':
                     self.paddle.set_plus_size()
                 elif brick.name == 'X2Ball':
                     self.ballsX2(ball)
+                elif brick.name == 'slow':
+                    for b in self.mass_balls:
+                        if b.VEL > 3:
+                            b.VEL -= 2
+
+
 
         if len(self.bricks) <= 0:
             self.load_next_level()
@@ -133,7 +140,7 @@ class Game:
         for row in range(len(bricksMatrix)):
             for col in range(len(bricksMatrix[row])):
                 brick_type = bricksMatrix[row][col]
-                if brick_type in [1, 2, 3, 4, 5]:
+                if brick_type != 0:
                     brick = BrickFactory.create_brick(gap + col * (brick_width + gap), gap + row * (brick_height + gap),
                                                       brick_type)
                     brick_sprites.add(brick)
@@ -319,6 +326,10 @@ class BrickFactory:
             return LongPaddleBrick(x, y)
         elif brick_type == 5:
             return X2BallBrick(x, y)
+        elif brick_type == 6:
+            return SlowBrick(x, y)
+        elif brick_type == 7:
+            return MetalicaBrick(x, y)
         else:
             raise ValueError("Unsupported brick type")
 
@@ -375,6 +386,23 @@ class X2BallBrick(Brick):
         self.name = "X2Ball"
         self.images = [pygame.image.load(f'images/bt_balls.png')]
         self.image = self.images[self.imageIndex]
+
+
+class SlowBrick(Brick):
+    def __init__(self, x, y):
+        super().__init__(x, y, 1)
+        self.name = "slow"
+        self.images = [pygame.image.load(f'images/bt_slow.png')]
+        self.image = self.images[self.imageIndex]
+class MetalicaBrick(Brick):
+    def __init__(self, x, y):
+        super().__init__(x, y, 4)
+        self.images = [pygame.image.load('images/bt5/bt5_1.png'),
+                            pygame.image.load('images/bt5/bt5_2.png'),
+                            pygame.image.load('images/bt5/bt5_3.png'),
+                            pygame.image.load('images/bt5/bt5_4.png')]
+        self.image = self.images[self.imageIndex]
+
 
 
 if __name__ == "__main__":
