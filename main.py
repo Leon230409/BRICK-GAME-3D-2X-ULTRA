@@ -14,6 +14,7 @@ BALL_RADIUS = 10
 pygame.font.init()
 LIVES_FONT = pygame.font.SysFont("comicsans", 40)
 LEVEL = 1
+DISPLAY_POS = 0
 
 
 # Game class
@@ -46,6 +47,7 @@ class Game:
         self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
 
     def handle_events(self):
+        global DISPLAY_POS
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
@@ -55,10 +57,15 @@ class Game:
 
 
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_a] and self.paddle.rect.x > 0:
-            self.paddle.move(-1)
-        if keys[pygame.K_d] and self.paddle.rect.x + self.paddle.rect.width < WIDTH:
-            self.paddle.move(1)
+        if keys[pygame.K_a] and self.paddle.rect.right < WIDTH:
+            print(self.paddle.rect.x)
+            # self.paddle.move(-1)
+            DISPLAY_POS -= 5
+            self.paddle.set_pos(5)
+        if keys[pygame.K_d] and self.paddle.rect.x > 0:
+            # self.paddle.move(1)
+            DISPLAY_POS += 5
+            self.paddle.set_pos(-5)
         if keys[pygame.K_z]:
             print("STOP")
         if keys[pygame.K_f]:
@@ -258,29 +265,30 @@ class Game:
         pygame.display.update()
 
     def run(self):
+        global DISPLAY_POS
         run = True
         hwnd = pygame.display.get_wm_info()["window"]
-        x = (ctypes.windll.user32.GetSystemMetrics(0)-WIDTH) // 2
+        DISPLAY_POS = (ctypes.windll.user32.GetSystemMetrics(0)-WIDTH) // 2
 
 
-        move = 'left'
+        # move = 'left'
 
         while run:
             run = self.handle_events()
-            if move == "right":
-                x += 1
-                self.paddle.set_pos(-1)
-                if self.paddle.rect.x <= 0:
-                    move = "left"
-            else:
-                x -= 1
-                self.paddle.set_pos()
-                if self.paddle.rect.right >= WIDTH:
-                    move = 'right'
+            # if move == "right":
+            #     DISPLAY_POS += 1
+            #     self.paddle.set_pos(-1)
+            #     if self.paddle.rect.x <= 0:
+            #         move = "left"
+            # else:
+            #     DISPLAY_POS -= 1
+            #     self.paddle.set_pos()
+            #     if self.paddle.rect.right >= WIDTH:
+            #         move = 'right'
 
 
             # Используем библиотеку ctypes для перемещения окна
-            ctypes.windll.user32.SetWindowPos(hwnd, 0, x, 100, 0, 0, 0x0001)
+            ctypes.windll.user32.SetWindowPos(hwnd, 0, DISPLAY_POS, 100, 0, 0, 0x0001)
             self.update_game_state()
             self.draw()
             self.clock.tick(FPS)
