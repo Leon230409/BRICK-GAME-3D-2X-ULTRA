@@ -95,7 +95,7 @@ class Game:
 
 
 
-        if len(self.bricks) <= 0:
+        if len(self.bricks) <= 0 or all(isinstance(sprite, MetalicaBrick) for sprite in self.bricks.sprites()):
             self.load_next_level()
 
         if self.LIVES <= 0:
@@ -400,12 +400,13 @@ class SlowBrick(Brick):
         self.image = self.images[self.imageIndex]
 class MetalicaBrick(Brick):
     def __init__(self, x, y):
-        super().__init__(x, y, 4)
-        self.images = [pygame.image.load('images/bt5/bt5_1.png'),
-                            pygame.image.load('images/bt5/bt5_2.png'),
-                            pygame.image.load('images/bt5/bt5_3.png'),
-                            pygame.image.load('images/bt5/bt5_4.png')]
+        super().__init__(x, y, 1)
+        self.images = [pygame.image.load('images/bt5/bt5_1.png'),]
         self.image = self.images[self.imageIndex]
+
+    def hit(self):
+        pass
+
 
 
 
