@@ -2,6 +2,7 @@ import pygame
 import math
 import random
 from levels import gameLevels
+import ctypes
 import os
 
 # Constants
@@ -258,8 +259,28 @@ class Game:
 
     def run(self):
         run = True
+        hwnd = pygame.display.get_wm_info()["window"]
+        x = (ctypes.windll.user32.GetSystemMetrics(0)-WIDTH) // 2
+
+
+        move = 'left'
+
         while run:
             run = self.handle_events()
+            if move == "right":
+                x += 1
+                self.paddle.set_pos(-1)
+                if self.paddle.rect.x <= 0:
+                    move = "left"
+            else:
+                x -= 1
+                self.paddle.set_pos()
+                if self.paddle.rect.right >= WIDTH:
+                    move = 'right'
+
+
+            # Используем библиотеку ctypes для перемещения окна
+            ctypes.windll.user32.SetWindowPos(hwnd, 0, x, 100, 0, 0, 0x0001)
             self.update_game_state()
             self.draw()
             self.clock.tick(FPS)
@@ -269,7 +290,7 @@ class Game:
 
 
 class Paddle(pygame.sprite.Sprite):
-    VEL = 5
+    VEL = 0
 
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -281,6 +302,10 @@ class Paddle(pygame.sprite.Sprite):
 
     def move(self, direction):
         self.rect.x = self.rect.x + self.VEL * direction
+
+    def set_pos(self, direction=1):
+        self.rect.x = self.rect.x + 1 * direction
+
 
     def set_plus_size(self):
         center = self.rect.center
