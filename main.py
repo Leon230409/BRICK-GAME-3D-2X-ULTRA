@@ -2,6 +2,9 @@ import pygame
 import math
 import random
 from levels import gameLevels
+from Ball import *
+from Paddle import *
+from brick import *
 import os
 
 # Constants
@@ -20,7 +23,7 @@ class Game:
     def __init__(self):
         self.mass_balls = [Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 50 - BALL_RADIUS, BALL_RADIUS,
                                 gameLevels[LEVEL]["ballColor"], 5)]
-        self.paddle = Paddle()
+        self.paddle = Paddle((WIDTH, HEIGHT))
         pygame.init()
         self.win = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("BRICK BREAKER")
@@ -105,7 +108,7 @@ class Game:
         global LEVEL
         LEVEL += 1
         self.all_sprites.remove(self.paddle)
-        self.paddle = Paddle()
+        self.paddle = Paddle((WIDTH, HEIGHT))
         self.all_sprites.add(self.paddle)
         self.mass_balls = [Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
                                 gameLevels[LEVEL]["ballColor"], 5)]
@@ -118,8 +121,10 @@ class Game:
     def reset_game(self):
         global LEVEL
         LEVEL = 1
+        # saveCoordX = self.paddle.rect.centerx
         self.all_sprites.remove(self.paddle)
-        self.paddle = Paddle()
+        self.paddle = Paddle((WIDTH, HEIGHT))
+        # self.paddle.set_posX(saveCoordX)
         self.all_sprites.add(self.paddle)
         self.mass_balls = [Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
                                 gameLevels[LEVEL]["ballColor"], 5)]
@@ -266,148 +271,6 @@ class Game:
 
         pygame.quit()
         quit()
-
-
-class Paddle(pygame.sprite.Sprite):
-    VEL = 5
-
-    def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('images/paddle.png')
-        self.rect = self.image.get_rect()
-        self.normalWidth = self.rect.width
-        self.height = self.rect[3]
-        self.rect.center = (WIDTH // 2, HEIGHT - self.height)
-
-    def move(self, direction):
-        self.rect.x = self.rect.x + self.VEL * direction
-
-    def set_plus_size(self):
-        center = self.rect.center
-        self.rect.width = self.normalWidth * 1.5
-
-        self.rect.center = center
-        self.image = pygame.transform.scale(self.image, (self.rect.width, self.rect.height))
-        print(self.rect.size)
-
-
-class Ball:
-    def __init__(self, x, y, radius, color, speed):
-        self.x = x
-        self.y = y
-        self.radius = radius
-        self.color = color
-        self.VEL = speed
-        self.x_vel = 0
-        self.y_vel = -1
-
-    def move(self):
-        self.x += self.x_vel * self.VEL
-        self.y += self.y_vel * self.VEL
-
-    def set_vel(self, x_vel, y_vel):
-        self.x_vel = x_vel
-        self.y_vel = y_vel
-
-    def draw(self, win):
-        pygame.draw.circle(win, self.color, (self.x, self.y), self.radius)
-
-    def set_position(self, x, y):
-        self.x = x
-        self.y = y
-
-
-class BrickFactory:
-    @staticmethod
-    def create_brick(x, y, brick_type):
-        if brick_type == 1:
-            return Brick(x, y, 2)
-        elif brick_type == 2:
-            return BonusBrick(x, y)
-        elif brick_type == 3:
-            return ForceBrick(x, y)
-        elif brick_type == 4:
-            return LongPaddleBrick(x, y)
-        elif brick_type == 5:
-            return X2BallBrick(x, y)
-        elif brick_type == 6:
-            return SlowBrick(x, y)
-        elif brick_type == 7:
-            return MetalicaBrick(x, y)
-        else:
-            raise ValueError("Unsupported brick type")
-
-
-class Brick(pygame.sprite.Sprite):
-    def __init__(self, x, y, health):
-        pygame.sprite.Sprite.__init__(self)
-        self.name = "normal"
-        self.health = health
-        self.images = []
-        self.numDir = random.choice(range(1, 4))
-        self.images.extend([pygame.image.load(f'images/bt{self.numDir}/bt{self.numDir}_1.png'),
-                            pygame.image.load(f'images/bt{self.numDir}/bt{self.numDir}_2.png')])
-        self.imageIndex = 0
-        self.image = self.images[self.imageIndex]
-        self.rect = self.image.get_rect()
-        self.rect.topleft = (x, y)
-
-    def hit(self):
-        self.health -= 1
-        self.imageIndex += 1
-        if self.imageIndex < len(self.images):
-            self.image = self.images[self.imageIndex]
-
-
-class BonusBrick(Brick):
-    def __init__(self, x, y):
-        super().__init__(x, y, 1)
-        self.name = "speed"
-        self.images = [pygame.image.load(f'images/bt_speed.png')]
-        self.image = self.images[self.imageIndex]
-
-
-class ForceBrick(Brick):
-    def __init__(self, x, y):
-        super().__init__(x, y, 1)
-        self.name = "force"
-        self.images = [pygame.image.load(f'images/bt_force.png')]
-        self.image = self.images[self.imageIndex]
-
-
-class LongPaddleBrick(Brick):
-    def __init__(self, x, y):
-        super().__init__(x, y, 1)
-        self.name = "longPaddle"
-        self.images = [pygame.image.load(f'images/bt_longPaddle.png')]
-        self.image = self.images[self.imageIndex]
-
-
-
-class X2BallBrick(Brick):
-    def __init__(self, x, y):
-        super().__init__(x, y, 1)
-        self.name = "X2Ball"
-        self.images = [pygame.image.load(f'images/bt_balls.png')]
-        self.image = self.images[self.imageIndex]
-
-
-class SlowBrick(Brick):
-    def __init__(self, x, y):
-        super().__init__(x, y, 1)
-        self.name = "slow"
-        self.images = [pygame.image.load(f'images/bt_slow.png')]
-        self.image = self.images[self.imageIndex]
-class MetalicaBrick(Brick):
-    def __init__(self, x, y):
-        super().__init__(x, y, 1)
-        self.images = [pygame.image.load('images/bt5/bt5_1.png'),]
-        self.image = self.images[self.imageIndex]
-
-    def hit(self):
-        pass
-
-
 
 
 if __name__ == "__main__":
