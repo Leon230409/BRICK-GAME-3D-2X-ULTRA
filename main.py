@@ -9,7 +9,7 @@ import os
 
 # Constants
 WIDTH, HEIGHT = 850, 600
-FPS = 60
+FPS = 120
 PADDLE_WIDTH = 120
 PADDLE_HEIGHT = 10
 BALL_RADIUS = 10
@@ -22,7 +22,7 @@ LEVEL = 1
 class Game:
     def __init__(self):
         self.mass_balls = [Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 50 - BALL_RADIUS, BALL_RADIUS,
-                                gameLevels[LEVEL]["ballColor"], 5)]
+                                gameLevels[LEVEL]["ballColor"], 3)]
         self.paddle = Paddle((WIDTH, HEIGHT))
         pygame.init()
         self.win = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -83,7 +83,7 @@ class Game:
                 self.bricks.remove(brick)
                 if brick.name == "speed":
                     for b in self.mass_balls:
-                        if b.VEL < 7:
+                        if b.VEL < 5:
                             b.VEL += 2
                 elif brick.name == 'force':
                     self.FORCE = True
@@ -93,7 +93,7 @@ class Game:
                     self.ballsX2(ball)
                 elif brick.name == 'slow':
                     for b in self.mass_balls:
-                        if b.VEL > 3:
+                        if b.VEL > 1:
                             b.VEL -= 2
 
 
@@ -111,7 +111,7 @@ class Game:
         self.paddle = Paddle((WIDTH, HEIGHT))
         self.all_sprites.add(self.paddle)
         self.mass_balls = [Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
-                                gameLevels[LEVEL]["ballColor"], 5)]
+                                gameLevels[LEVEL]["ballColor"], 3)]
         self.bricks = self.generate_bricks()
         self.background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
         self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
@@ -127,7 +127,7 @@ class Game:
         # self.paddle.set_posX(saveCoordX)
         self.all_sprites.add(self.paddle)
         self.mass_balls = [Ball(WIDTH / 2, HEIGHT - PADDLE_HEIGHT - 5 - BALL_RADIUS, BALL_RADIUS,
-                                gameLevels[LEVEL]["ballColor"], 5)]
+                                gameLevels[LEVEL]["ballColor"], 3)]
         self.bricks = self.generate_bricks()
         self.background_image = pygame.image.load(gameLevels[LEVEL]["bckImg"])
         self.background_image = pygame.transform.scale(self.background_image, (WIDTH, HEIGHT))
@@ -154,7 +154,7 @@ class Game:
 
     def generate_ball(self):
         self.mass_balls.append(Ball(self.paddle.rect.x + self.paddle.rect.width // 2, self.paddle.rect.y - 5 - BALL_RADIUS, BALL_RADIUS,
-                                gameLevels[LEVEL]["ballColor"], 5))
+                                gameLevels[LEVEL]["ballColor"], 3))
 
     def ballsX2(self, ball):
         newBall = Ball(ball.x, ball.y, ball.radius, ball.color, ball.VEL)
